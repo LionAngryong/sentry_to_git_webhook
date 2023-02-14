@@ -19,6 +19,7 @@ async def main(request: Request):
     try:
         create_github_issue(json)
     except Exception as e:
+        print(e.__traceback__)
         raise HTTPException(status_code=400, detail=str(e))
     return {"message": "Ok"}
 
@@ -26,11 +27,11 @@ async def main(request: Request):
 def create_github_issue(res_json):
     sentry_issue_id = res_json["id"]
     project_name = res_json["project_name"]
-    title = res_json["title"]
+    title = res_json["event"]["title"]
     error = res_json["message"]
     time = None
     error_detail = None
-    for i in res_json["breadcrumbs"]["values"]:
+    for i in res_json["event"]["breadcrumbs"]["values"]:
         if i["level"] == "error":
             timestamp = i["timestamp"]
             time = datetime.datetime.fromtimestamp(timestamp)
@@ -64,8 +65,8 @@ def create_github_issue(res_json):
     }
 
     print(body)
-    # response = requests.post(url, headers=headers, json=data)
-    # return response.json()
+    response = requests.post(url, headers=headers, json=data)
+    return response.json()
 
 
 handler = Mangum(app)
