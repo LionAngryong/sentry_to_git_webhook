@@ -39,10 +39,10 @@ def create_github_issue(res_json):
             error_detail = i["message"]
 
     sentry_url = res_json["url"]
-    body = f"### sentry issue id : [{sentry_issue_id}]({sentry_url}) \
-        ### 에러 내역 \
-        - 발생시간 : {time} \
-        - 에러 : {error} \
+    body = f"### sentry issue id : [{sentry_issue_id}]({sentry_url}) \n \
+        ### 에러 내역 \n \
+        - 발생시간 : {time} \n \
+        - 에러 : {error} \n \
         - 상세 : {error_detail}"
 
     url = f"https://api.github.com/repos/lionrocket-inc/{project_name}/issues"
