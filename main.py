@@ -1,7 +1,9 @@
 import datetime
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 import requests
+import json
+import markdown
 from mangum import Mangum
 
 app = FastAPI()
@@ -16,11 +18,7 @@ async def health():
 @app.post("/hook_check")
 async def main(request: Request):
     json = await request.json()
-    try:
-        create_github_issue(json)
-    except Exception as e:
-        print(e.__traceback__)
-        raise HTTPException(status_code=400, detail=str(e))
+    create_github_issue(json)
     return {"message": "Ok"}
 
 
@@ -38,20 +36,18 @@ def create_github_issue(res_json):
             error_detail = i["message"]
 
     sentry_url = res_json["url"]
-
-    body = \
-        f"""
+    body = markdown.markdown(f'''
         ### [{sentry_issue_id}]({sentry_url})
 
         ### 에러
         - 발생시간 : {time}
         - 에러 : {error}
         - 상세 : {error_detail}
-    """
+    ''')
 
-    token = "aaa"
+    token = "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"
 
-    url = f"https://api.github.com/repos/lion-inc/{project_name}/issues"
+    url = f"https://api.github.com/repos/lionrocket-inc/{project_name}/issues"
     headers = {
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {token}",
@@ -60,12 +56,10 @@ def create_github_issue(res_json):
     data = {
         "title": title,
         "body": body,
-        "milestone": 1,
         "labels": ["bug"],
     }
 
-    print(body)
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.post(url, headers=headers, data=json.dumps(data))
     return response.json()
 
 
