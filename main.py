@@ -1,13 +1,16 @@
-import datetime
-
 from fastapi import FastAPI, Request
+from pytz import timezone
+from mangum import Mangum
+from dotenv import load_dotenv
+import os
+import datetime
 import requests
 import json
-import markdown
-from mangum import Mangum
 
+
+load_dotenv()
+token = os.environ.get('token')
 app = FastAPI()
-
 
 
 @app.get("/")
@@ -32,20 +35,15 @@ def create_github_issue(res_json):
     for i in res_json["event"]["breadcrumbs"]["values"]:
         if i["level"] == "error":
             timestamp = i["timestamp"]
-            time = datetime.datetime.fromtimestamp(timestamp)
+            time = datetime.datetime.fromtimestamp(timestamp, tz=timezone('Asia/Seoul'))
             error_detail = i["message"]
 
     sentry_url = res_json["url"]
-    body = markdown.markdown(f'''
-        ### [{sentry_issue_id}]({sentry_url})
-
-        ### 에러
-        - 발생시간 : {time}
-        - 에러 : {error}
-        - 상세 : {error_detail}
-    ''')
-
-    token = "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"
+    body = f"### sentry issue id : [{sentry_issue_id}]({sentry_url}) \
+        ### 에러 내역 \
+        - 발생시간 : {time} \
+        - 에러 : {error} \
+        - 상세 : {error_detail}"
 
     url = f"https://api.github.com/repos/lionrocket-inc/{project_name}/issues"
     headers = {
